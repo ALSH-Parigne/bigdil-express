@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+.env.local
+output
+.DS_Store
+*.log
+service-account-key.json

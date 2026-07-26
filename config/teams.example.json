@@ -1,0 +1,44 @@
+[
+  {
+    "slug": "renards",
+    "name": "Les Renards",
+    "steps": [
+      {
+        "order": 1,
+        "mission": "Filmez-vous en train de pousser le cri d'un animal, tous ensemble !",
+        "clue": "Direction le grand chêne près du terrain de foot. Cherchez sous le banc rouge."
+      },
+      {
+        "order": 2,
+        "mission": "Inventez une danse de la victoire en 10 secondes et filmez-la !",
+        "clue": "Allez voir du côté du préau. Un indice est collé sous une table."
+      },
+      {
+        "order": 3,
+        "mission": "Formez une pyramide humaine (ou la version la plus haute possible) et filmez le résultat !",
+        "clue": "Bravo, vous avez terminé le parcours ! Retournez voir votre animateur."
+      }
+    ]
+  },
+  {
+    "slug": "hiboux",
+    "name": "Les Hiboux",
+    "steps": [
+      {
+        "order": 1,
+        "mission": "Filmez toute l'équipe en train de faire la statue pendant 5 secondes.",
+        "clue": "Allez près du portail d'entrée, regardez sous le pot de fleurs."
+      },
+      {
+        "order": 2,
+        "mission": "Filmez un enchaînement de 3 pas de danse inventés par l'équipe.",
+        "clue": "Direction le bac à sable. L'indice est accroché au grillage."
+      },
+      {
+        "order": 3,
+        "mission": "Filmez toute l'équipe en train de crier le nom de l'équipe le plus fort possible !",
+        "clue": "Bravo, vous avez terminé le parcours ! Retournez voir votre animateur."
+      }
+    ]
+  }
+]

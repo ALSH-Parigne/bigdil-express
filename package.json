@@ -1,0 +1,42 @@
+{
+  "name": "chasse-tresor-parigne",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Jeu de piste vidéo (QR codes + indices) pour l'ALSH Parigné-sur-Braye",
+  "author": "Cyril Vanhamme",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "seed": "node scripts/seed.mjs",
+    "qrcodes": "node scripts/generate-qrcodes.mjs",
+    "export-drive": "node scripts/export-to-drive.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "lucide-react": "^1.17.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-router-dom": "^6.26.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "autoprefixer": "^10.5.0",
+    "dotenv": "^16.4.5",
+    "eslint": "^10.3.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.6.0",
+    "googleapis": "^144.0.0",
+    "nanoid": "^5.0.7",
+    "postcss": "^8.5.15",
+    "qrcode": "^1.5.4",
+    "tailwindcss": "^3.4.13",
+    "vite": "^8.0.12"
+  }
+}
