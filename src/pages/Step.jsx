@@ -89,15 +89,16 @@ export default function Step() {
 
         <div className="rounded-2xl bg-white shadow-custom p-6 mb-6">
           <h1 className="text-lg font-bold text-gray-900 mb-2">Mission</h1>
-          {step.mission_video_url && (
+          {step.mission_video_url ? (
             <video
               src={step.mission_video_url}
               controls
               playsInline
-              className="w-full rounded-xl bg-black mb-3 aspect-video"
+              className="w-full rounded-xl bg-black aspect-video"
             />
+          ) : (
+            <p className="text-gray-700">{step.mission}</p>
           )}
-          <p className="text-gray-700">{step.mission}</p>
         </div>
 
         {!revealed && (
