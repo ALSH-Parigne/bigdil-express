@@ -114,14 +114,33 @@ Le site est sur `http://localhost:3000`. Ouvrez une des URLs affichées par
 
 ### 6. Déployer (Netlify, gratuit)
 
-1. Poussez ce dossier sur un dépôt Git (GitHub par exemple).
-2. Sur [netlify.com](https://netlify.com), "Add new site" > importez le repo.
-3. Build command : `npm run build` — Publish directory : `dist`
-4. Dans les "Environment variables" du site Netlify, ajoutez
-   `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` (les mêmes que dans votre
-   `.env` local — **pas** la clé `service_role`).
-5. Une fois déployé, mettez à jour `SITE_URL` dans votre `.env` local avec
-   l'URL Netlify, puis relancez `npm run qrcodes` pour les QR codes finaux.
+**Site en production** : https://chasse-tresor-parigne.netlify.app
+
+Déployé via la Netlify CLI (`brew install netlify-cli` puis `netlify login`),
+sans intégration GitHub continue — chaque changement de **code** (pas de
+contenu, voir plus bas) se déploie manuellement :
+
+```bash
+npm run build
+netlify deploy --prod --dir=dist
+```
+
+Le fichier [`public/_redirects`](public/_redirects) (`/* /index.html 200`)
+est indispensable : sans lui, Netlify renvoie une 404 sur les routes
+React comme `/admin` ou `/j/<token>` en accès direct.
+
+Les variables d'environnement (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`)
+sont déjà configurées sur le site Netlify (`netlify env:set ...` — **jamais**
+la clé `service_role`). Pour les revoir/modifier : dashboard Netlify du site
+> Site configuration > Environment variables.
+
+**Important** : modifier les missions/indices (`config/steps.json` +
+`npm run seed`) ne nécessite **aucun redéploiement** — le contenu vit dans
+Supabase et est chargé à chaque visite. Seul un changement de **code** (donc
+rare) demande de relancer `netlify deploy --prod --dir=dist`.
+
+Une fois l'URL de prod connue, mettez à jour `SITE_URL` dans `.env` puis
+relancez `npm run qrcodes` pour les QR codes finaux à imprimer.
 
 ## 📤 Export des vidéos vers Google Drive (après l'événement)
 
