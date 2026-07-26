@@ -1,6 +1,10 @@
 -- ============================================================================
 -- Chasse au trésor vidéo - ALSH Parigné-sur-Braye
--- À exécuter une fois dans Supabase : Dashboard > SQL Editor > New query > Run
+-- À exécuter dans Supabase : Dashboard > SQL Editor > New query > Run
+--
+-- Modèle : 8 QR codes physiques PARTAGÉS par toutes les équipes (25 équipes,
+-- même parcours). Chaque équipe choisit son nom une seule fois (mémorisé sur
+-- son téléphone) puis scanne les mêmes 8 QR codes que tout le monde.
 -- ============================================================================
 
 create extension if not exists pgcrypto;
@@ -11,26 +15,24 @@ create extension if not exists pgcrypto;
 
 create table if not exists teams (
   id uuid primary key default gen_random_uuid(),
-  slug text unique not null,
-  name text not null,
+  name text unique not null,
   created_at timestamptz default now()
 );
 
 create table if not exists steps (
   id uuid primary key default gen_random_uuid(),
-  team_id uuid not null references teams(id) on delete cascade,
-  order_index int not null,
+  order_index int unique not null,
   token text unique not null,
   mission text not null,
   clue_text text not null,
   clue_image_url text,
-  created_at timestamptz default now(),
-  unique (team_id, order_index)
+  created_at timestamptz default now()
 );
 
 create table if not exists submissions (
   id uuid primary key default gen_random_uuid(),
   step_id uuid not null references steps(id) on delete cascade,
+  team_id uuid not null references teams(id) on delete cascade,
   video_path text not null,
   created_at timestamptz default now()
 );
@@ -45,11 +47,11 @@ create table if not exists admin_config (
 -- ----------------------------------------------------------------------------
 -- Row Level Security
 --
--- Par défaut, personne (rôle "anon", celui utilisé par le site) ne peut lire
--- teams/steps/admin_config directement : sinon n'importe qui pourrait, via la
--- clé publique anon, interroger toutes les étapes et voir les indices des
--- autres équipes à l'avance. Tout passe donc par les fonctions RPC ci-dessous,
--- qui ne renvoient que ce qui est nécessaire.
+-- Les noms d'équipe sont publics (nécessaire pour le sélecteur d'équipe côté
+-- site), mais missions/indices (table steps) restent fermés à la lecture
+-- directe : sinon n'importe qui pourrait, via la clé publique anon, lire
+-- toutes les étapes et voir les indices à l'avance. Tout passe par la
+-- fonction RPC get_step_by_token ci-dessous.
 -- ----------------------------------------------------------------------------
 
 alter table teams enable row level security;
@@ -57,7 +59,12 @@ alter table steps enable row level security;
 alter table submissions enable row level security;
 alter table admin_config enable row level security;
 
--- Le site a seulement besoin d'INSÉRER une soumission après l'envoi d'une vidéo.
+drop policy if exists "anon can read team names" on teams;
+create policy "anon can read team names"
+  on teams for select
+  to anon
+  using (true);
+
 drop policy if exists "anon can insert submissions" on submissions;
 create policy "anon can insert submissions"
   on submissions for insert
@@ -66,14 +73,12 @@ create policy "anon can insert submissions"
 
 -- ----------------------------------------------------------------------------
 -- RPC : récupérer une étape (mission + indice) à partir de son token public
--- (celui encodé dans le QR code). security definer = contourne le RLS
--- ci-dessus juste pour cette requête précise et contrôlée.
+-- (celui encodé dans le QR code, commun à toutes les équipes).
 -- ----------------------------------------------------------------------------
 
 create or replace function get_step_by_token(p_token text)
 returns table (
   step_id uuid,
-  team_name text,
   order_index int,
   mission text,
   clue_text text,
@@ -83,9 +88,8 @@ language sql
 security definer
 set search_path = public
 as $$
-  select s.id, t.name, s.order_index, s.mission, s.clue_text, s.clue_image_url
+  select s.id, s.order_index, s.mission, s.clue_text, s.clue_image_url
   from steps s
-  join teams t on t.id = s.team_id
   where s.token = p_token;
 $$;
 
@@ -120,7 +124,7 @@ begin
     select t.name, s.order_index, s.mission, sub.video_path, sub.created_at
     from submissions sub
     join steps s on s.id = sub.step_id
-    join teams t on t.id = s.team_id
+    join teams t on t.id = sub.team_id
     order by sub.created_at desc;
 end;
 $$;

@@ -61,9 +61,9 @@ const log = existsSync(LOG_PATH) ? JSON.parse(await readFile(LOG_PATH, 'utf-8'))
 
 const [{ data: teams, error: teamsError }, { data: steps, error: stepsError }, { data: submissions, error: subsError }] =
   await Promise.all([
-    supabase.from('teams').select('id, slug, name'),
-    supabase.from('steps').select('id, team_id, order_index'),
-    supabase.from('submissions').select('id, step_id, video_path, created_at').order('created_at'),
+    supabase.from('teams').select('id, name'),
+    supabase.from('steps').select('id, order_index'),
+    supabase.from('submissions').select('id, step_id, team_id, video_path, created_at').order('created_at'),
   ])
 
 if (teamsError) throw teamsError
@@ -102,7 +102,7 @@ for (const sub of submissions) {
   }
 
   const step = stepsById[sub.step_id]
-  const team = step ? teamsById[step.team_id] : null
+  const team = teamsById[sub.team_id]
   if (!step || !team) {
     console.warn(`⚠️  Soumission ${sub.id} ignorée : équipe/étape introuvable.`)
     failed++

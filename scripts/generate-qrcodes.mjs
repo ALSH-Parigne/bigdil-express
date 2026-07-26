@@ -1,5 +1,6 @@
-// Génère une page HTML imprimable par équipe, avec un QR code par étape.
-// Ouvrez les fichiers générés dans un navigateur et faites Cmd+P / Ctrl+P pour imprimer.
+// Génère UNE page HTML imprimable avec les 8 QR codes du parcours (partagés
+// par toutes les équipes). Ouvrez le fichier généré dans un navigateur et
+// faites Cmd+P / Ctrl+P pour imprimer.
 //
 // Usage : npm run qrcodes   (lancer "npm run seed" avant, pour être sûr d'avoir les derniers indices/tokens)
 
@@ -28,55 +29,39 @@ if (SITE_URL.includes('localhost')) {
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
 
-const { data: teams, error: teamsError } = await supabase
-  .from('teams')
-  .select('id, slug, name')
-  .order('slug')
-if (teamsError) throw teamsError
+const { data: steps, error } = await supabase
+  .from('steps')
+  .select('order_index, token')
+  .order('order_index')
+if (error) throw error
+
+if (steps.length === 0) {
+  console.error('Aucune étape trouvée. Lancez d\'abord "npm run seed".')
+  process.exit(1)
+}
+
+let cardsHtml = ''
+for (const step of steps) {
+  const url = `${SITE_URL}/j/${step.token}`
+  const dataUrl = await QRCode.toDataURL(url, { margin: 1, width: 400 })
+  cardsHtml += `
+    <div class="card">
+      <img src="${dataUrl}" alt="QR code étape ${step.order_index}" />
+      <p class="label">Étape ${step.order_index}</p>
+    </div>`
+}
 
 const outDir = 'output/qrcodes'
 await mkdir(outDir, { recursive: true })
 
-let allTeamsHtml = ''
-
-for (const team of teams) {
-  const { data: steps, error: stepsError } = await supabase
-    .from('steps')
-    .select('order_index, token')
-    .eq('team_id', team.id)
-    .order('order_index')
-  if (stepsError) throw stepsError
-
-  let cardsHtml = ''
-  for (const step of steps) {
-    const url = `${SITE_URL}/j/${step.token}`
-    const dataUrl = await QRCode.toDataURL(url, { margin: 1, width: 400 })
-    cardsHtml += `
-      <div class="card">
-        <img src="${dataUrl}" alt="QR code étape ${step.order_index}" />
-        <p class="label">${team.name} — Étape ${step.order_index}</p>
-      </div>`
-  }
-
-  const teamHtml = renderPage(team.name, cardsHtml)
-  await writeFile(`${outDir}/${team.slug}.html`, teamHtml, 'utf-8')
-  allTeamsHtml += `<h2 class="team-title">${team.name}</h2><div class="grid">${cardsHtml}</div>`
-  console.log(`✅ ${outDir}/${team.slug}.html (${steps.length} étapes)`)
-}
-
-await writeFile(`${outDir}/all.html`, renderPage('Tous les parcours', allTeamsHtml), 'utf-8')
-console.log(`✅ ${outDir}/all.html (toutes les équipes)`)
-
-function renderPage(title, bodyHtml) {
-  return `<!doctype html>
+const html = `<!doctype html>
 <html lang="fr">
 <head>
 <meta charset="utf-8" />
-<title>${title} - QR codes</title>
+<title>Chasse au trésor - QR codes</title>
 <style>
   body { font-family: -apple-system, sans-serif; margin: 0; padding: 24px; }
   h1 { text-align: center; }
-  .team-title { margin-top: 40px; page-break-before: always; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; }
   .card { text-align: center; border: 1px solid #ddd; border-radius: 12px; padding: 16px; break-inside: avoid; }
   .card img { width: 100%; height: auto; }
@@ -87,8 +72,10 @@ function renderPage(title, bodyHtml) {
 </style>
 </head>
 <body>
-  <h1>${title}</h1>
-  ${bodyHtml}
+  <h1>Chasse au trésor - 8 étapes (parcours commun à toutes les équipes)</h1>
+  <div class="grid">${cardsHtml}</div>
 </body>
 </html>`
-}
+
+await writeFile(`${outDir}/qrcodes.html`, html, 'utf-8')
+console.log(`✅ ${outDir}/qrcodes.html (${steps.length} QR codes)`)

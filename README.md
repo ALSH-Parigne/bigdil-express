@@ -6,14 +6,18 @@ suivant.
 
 ## 🧩 Comment ça marche
 
-- Chaque **équipe** a son propre parcours de QR codes (parcours différents par équipe).
+- Il y a **8 QR codes physiques, partagés par toutes les équipes** (25 équipes
+  dans ce cas) : tout le monde suit le même parcours, aux mêmes 8 stations.
 - Chaque QR code pointe vers `https://votre-site.fr/j/<token>` où `<token>` est
-  unique à une étape précise.
-- La page d'étape affiche la mission, ouvre l'appareil photo natif du
+  unique à une étape précise (mais commun à toutes les équipes).
+- Au premier scan, le téléphone demande "Quelle est votre équipe ?" (liste
+  déroulante) puis mémorise le choix (`localStorage`) pour les scans suivants
+  sur ce même téléphone — un lien "changer" permet de corriger si besoin.
+- La page d'étape affiche ensuite la mission, ouvre l'appareil photo natif du
   téléphone pour filmer, uploade la vidéo, puis affiche l'indice **tout de
   suite** (pas de validation manuelle).
 - Une page `/admin` protégée par mot de passe permet aux animateurs de
-  revoir toutes les vidéos envoyées.
+  revoir toutes les vidéos envoyées, filtrables par équipe et par étape.
 
 ## 🛠️ Stack
 
@@ -53,14 +57,16 @@ npm install
 
 ### 3. Définir les équipes, missions et indices
 
-Copiez le fichier d'exemple et éditez-le avec vos vraies équipes :
+Copiez le fichier d'exemple et éditez-le :
 
 ```bash
 cp config/teams.example.json config/teams.json
 ```
 
-Chaque équipe a une liste d'étapes, avec pour chacune : la mission (ce que
-les enfants doivent filmer) et l'indice débloqué une fois la vidéo envoyée.
+Le fichier contient deux listes :
+- `teams` : les noms des 25 équipes (une simple liste de chaînes de caractères).
+- `steps` : les 8 étapes du parcours commun, avec pour chacune la mission (ce
+  que les enfants doivent filmer) et l'indice débloqué une fois la vidéo envoyée.
 
 Puis synchronisez avec Supabase :
 
@@ -70,7 +76,8 @@ npm run seed
 
 **Important** : relancer `npm run seed` après une modif est sans risque — le
 token de chaque étape déjà créée est conservé (seul le texte est mis à jour),
-donc les QR codes déjà imprimés continuent de fonctionner.
+donc les QR codes déjà imprimés continuent de fonctionner. Les équipes déjà
+présentes (même nom) ne sont pas dupliquées.
 
 ### 4. Générer les QR codes à imprimer
 
@@ -78,9 +85,10 @@ donc les QR codes déjà imprimés continuent de fonctionner.
 npm run qrcodes
 ```
 
-Ça crée un fichier HTML imprimable par équipe dans `output/qrcodes/` (+ un
-fichier `all.html` avec tout le monde). Ouvrez-les dans un navigateur et
-imprimez (Cmd+P / Ctrl+P).
+Ça crée un seul fichier `output/qrcodes/qrcodes.html` avec les 8 QR codes du
+parcours (un par étape, partagé par toutes les équipes). Ouvrez-le dans un
+navigateur et imprimez (Cmd+P / Ctrl+P), puis affichez chaque QR code à sa
+station physique.
 
 ⚠️ Pensez à renseigner `SITE_URL` dans `.env` avec l'adresse **réelle** du
 site déployé avant l'impression finale (voir étape 5) — sinon les QR codes
@@ -166,7 +174,8 @@ l'événement (pas de souci de permissions caméra ou de format non supporté).
 - Les indices et missions ne sont accessibles que via une fonction serveur
   (`get_step_by_token`) qui ne renvoie qu'une seule étape à la fois : un
   enfant curieux ne peut pas interroger la base pour voir les indices des
-  étapes suivantes ou des autres équipes à l'avance.
+  étapes suivantes à l'avance (il doit avoir scanné le QR code physique
+  correspondant).
 - La page `/admin` est protégée par un mot de passe vérifié côté serveur
   (jamais exposé dans le code du site).
 - Aucune gestion de consentement/RGPD n'est intégrée dans l'app (choix fait
@@ -182,10 +191,12 @@ l'événement (pas de souci de permissions caméra ou de format non supporté).
 ```
 src/
   pages/Home.jsx     Page d'accueil (avant tout scan)
-  pages/Step.jsx      Page d'étape (mission, caméra, indice)
-  pages/Admin.jsx      Espace animateurs (vidéos reçues)
+  pages/Step.jsx      Page d'étape (sélection équipe, mission, caméra, indice)
+  pages/Admin.jsx      Espace animateurs (vidéos reçues, filtrables)
+  components/TeamPicker.jsx    Sélection de l'équipe (mémorisée sur le téléphone)
   components/VideoCapture.jsx   Capture + prévisualisation vidéo
   lib/supabase.js      Client Supabase
+  lib/team.js       Persistance de l'équipe choisie (localStorage)
 supabase/schema.sql     Schéma complet à exécuter dans Supabase
 scripts/seed.mjs      Synchronise config/teams.json -> Supabase
 scripts/generate-qrcodes.mjs  Génère les QR codes imprimables

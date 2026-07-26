@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { AlertTriangle, Lightbulb, Sparkles } from 'lucide-react'
+import { AlertTriangle, Lightbulb, Sparkles, RefreshCw } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase.js'
+import { getStoredTeam, setStoredTeam, clearStoredTeam } from '../lib/team.js'
 import VideoCapture from '../components/VideoCapture.jsx'
+import TeamPicker from '../components/TeamPicker.jsx'
 
 export default function Step() {
   const { token } = useParams()
   const [status, setStatus] = useState('loading') // loading | not-found | ready | config-missing
   const [step, setStep] = useState(null)
+  const [team, setTeam] = useState(() => getStoredTeam())
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState(null)
   const [revealed, setRevealed] = useState(false)
@@ -33,12 +36,22 @@ export default function Step() {
     return () => { cancelled = true }
   }, [token])
 
+  function handleTeamSelected(selectedTeam) {
+    setStoredTeam(selectedTeam)
+    setTeam(selectedTeam)
+  }
+
+  function handleChangeTeam() {
+    clearStoredTeam()
+    setTeam(null)
+  }
+
   async function handleConfirm(file) {
     setUploading(true)
     setUploadError(null)
     try {
       const extension = (file.name.split('.').pop() || 'mp4').toLowerCase()
-      const path = `${step.step_id}/${Date.now()}.${extension}`
+      const path = `${step.step_id}/${team.id}/${Date.now()}.${extension}`
 
       const { error: uploadErr } = await supabase.storage
         .from('videos')
@@ -47,7 +60,7 @@ export default function Step() {
 
       const { error: insertErr } = await supabase
         .from('submissions')
-        .insert({ step_id: step.step_id, video_path: path })
+        .insert({ step_id: step.step_id, team_id: team.id, video_path: path })
       if (insertErr) throw insertErr
 
       setRevealed(true)
@@ -84,44 +97,62 @@ export default function Step() {
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white px-4 py-8">
       <div className="mx-auto max-w-md animate-fade-in">
         <p className="text-center text-sm font-medium uppercase tracking-wide text-primary mb-1">
-          {step.team_name} · Étape {step.order_index}
+          Étape {step.order_index}
         </p>
 
-        <div className="rounded-2xl bg-white shadow-custom p-6 mb-6">
-          <h1 className="text-lg font-bold text-gray-900 mb-2">Mission</h1>
-          <p className="text-gray-700">{step.mission}</p>
-        </div>
-
-        {!revealed && (
+        {!team ? (
+          <div className="mt-4">
+            <TeamPicker onSelect={handleTeamSelected} />
+          </div>
+        ) : (
           <>
-            <VideoCapture onConfirm={handleConfirm} uploading={uploading} />
-            {uploadError && (
-              <p className="mt-3 text-center text-sm text-red-600">{uploadError}</p>
+            <button
+              type="button"
+              onClick={handleChangeTeam}
+              className="mx-auto mb-4 flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600"
+            >
+              Équipe : <span className="font-semibold text-gray-600">{team.name}</span>
+              <RefreshCw className="h-3 w-3" />
+              changer
+            </button>
+
+            <div className="rounded-2xl bg-white shadow-custom p-6 mb-6">
+              <h1 className="text-lg font-bold text-gray-900 mb-2">Mission</h1>
+              <p className="text-gray-700">{step.mission}</p>
+            </div>
+
+            {!revealed && (
+              <>
+                <VideoCapture onConfirm={handleConfirm} uploading={uploading} />
+                {uploadError && (
+                  <p className="mt-3 text-center text-sm text-red-600">{uploadError}</p>
+                )}
+              </>
+            )}
+
+            {revealed && (
+              <div className="rounded-2xl bg-white shadow-custom p-6 animate-fade-in">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/20">
+                    <Lightbulb className="h-5 w-5 text-accent" />
+                  </div>
+                  <h2 className="text-lg font-bold text-gray-900">Indice débloqué !</h2>
+                </div>
+                <p className="text-gray-700 whitespace-pre-line">{step.clue_text}</p>
+                {step.clue_image_url && (
+                  <img
+                    src={step.clue_image_url}
+                    alt="Indice"
+                    className="mt-4 w-full rounded-xl"
+                  />
+                )}
+                <div className="mt-4 flex items-center gap-2 text-sm text-secondary font-medium">
+                  <Sparkles className="h-4 w-4" />
+                  Vidéo bien reçue, bravo !
+                </div>
+              </div>
             )}
           </>
-        )}
-
-        {revealed && (
-          <div className="rounded-2xl bg-white shadow-custom p-6 animate-fade-in">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/20">
-                <Lightbulb className="h-5 w-5 text-accent" />
-              </div>
-              <h2 className="text-lg font-bold text-gray-900">Indice débloqué !</h2>
-            </div>
-            <p className="text-gray-700 whitespace-pre-line">{step.clue_text}</p>
-            {step.clue_image_url && (
-              <img
-                src={step.clue_image_url}
-                alt="Indice"
-                className="mt-4 w-full rounded-xl"
-              />
-            )}
-            <div className="mt-4 flex items-center gap-2 text-sm text-secondary font-medium">
-              <Sparkles className="h-4 w-4" />
-              Vidéo bien reçue, bravo !
-            </div>
-          </div>
         )}
       </div>
     </div>
