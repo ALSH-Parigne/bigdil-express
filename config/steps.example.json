@@ -1,10 +1,4 @@
 {
-  "teams": [
-    "Les Renards",
-    "Les Hiboux",
-    "Les Écureuils",
-    "Les Loutres"
-  ],
   "steps": [
     {
       "order": 1,
@@ -28,22 +22,22 @@
     },
     {
       "order": 5,
-      "mission": "Inventez un cri de guerre pour votre équipe et filmez-le, le plus fort possible !",
+      "mission": "Inventez un cri de guerre et filmez-le, le plus fort possible !",
       "clue": "Retournez vers le terrain de basket. L'indice est scotché sous un banc."
     },
     {
       "order": 6,
-      "mission": "Filmez un enchaînement de 3 pas de danse inventés par l'équipe.",
+      "mission": "Filmez un enchaînement de 3 pas de danse inventés à l'instant.",
       "clue": "Direction la cour principale, près du mât du drapeau."
     },
     {
       "order": 7,
-      "mission": "Filmez toute l'équipe en train de rigoler le plus fort possible pendant 5 secondes !",
+      "mission": "Filmez-vous en train de rigoler le plus fort possible pendant 5 secondes !",
       "clue": "Dernière étape : direction le point de rassemblement habituel."
     },
     {
       "order": 8,
-      "mission": "Filmez toute l'équipe en train de sauter en criant le nom de votre équipe !",
+      "mission": "Filmez-vous en train de sauter en criant le plus fort possible !",
       "clue": "Bravo, vous avez terminé le parcours ! Retournez voir votre animateur."
     }
   ]

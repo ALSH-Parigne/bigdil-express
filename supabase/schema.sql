@@ -2,9 +2,9 @@
 -- Chasse au trésor vidéo - ALSH Parigné-sur-Braye
 -- À exécuter dans Supabase : Dashboard > SQL Editor > New query > Run
 --
--- Modèle : 8 QR codes physiques PARTAGÉS par toutes les équipes (25 équipes,
--- même parcours). Chaque équipe choisit son nom une seule fois (mémorisé sur
--- son téléphone) puis scanne les mêmes 8 QR codes que tout le monde.
+-- Modèle : 8 QR codes physiques partagés par toutes les équipes. Le site ne
+-- suit pas quelle équipe envoie quoi : scanner un QR -> filmer -> envoyer ->
+-- indice. Simple et anonyme.
 -- ============================================================================
 
 create extension if not exists pgcrypto;
@@ -12,12 +12,6 @@ create extension if not exists pgcrypto;
 -- ----------------------------------------------------------------------------
 -- Tables
 -- ----------------------------------------------------------------------------
-
-create table if not exists teams (
-  id uuid primary key default gen_random_uuid(),
-  name text unique not null,
-  created_at timestamptz default now()
-);
 
 create table if not exists steps (
   id uuid primary key default gen_random_uuid(),
@@ -32,7 +26,6 @@ create table if not exists steps (
 create table if not exists submissions (
   id uuid primary key default gen_random_uuid(),
   step_id uuid not null references steps(id) on delete cascade,
-  team_id uuid not null references teams(id) on delete cascade,
   video_path text not null,
   created_at timestamptz default now()
 );
@@ -47,23 +40,15 @@ create table if not exists admin_config (
 -- ----------------------------------------------------------------------------
 -- Row Level Security
 --
--- Les noms d'équipe sont publics (nécessaire pour le sélecteur d'équipe côté
--- site), mais missions/indices (table steps) restent fermés à la lecture
--- directe : sinon n'importe qui pourrait, via la clé publique anon, lire
--- toutes les étapes et voir les indices à l'avance. Tout passe par la
--- fonction RPC get_step_by_token ci-dessous.
+-- Missions/indices (table steps) restent fermés à la lecture directe : sinon
+-- n'importe qui pourrait, via la clé publique anon, lire toutes les étapes et
+-- voir les indices à l'avance. Tout passe par la fonction RPC
+-- get_step_by_token ci-dessous.
 -- ----------------------------------------------------------------------------
 
-alter table teams enable row level security;
 alter table steps enable row level security;
 alter table submissions enable row level security;
 alter table admin_config enable row level security;
-
-drop policy if exists "anon can read team names" on teams;
-create policy "anon can read team names"
-  on teams for select
-  to anon
-  using (true);
 
 drop policy if exists "anon can insert submissions" on submissions;
 create policy "anon can insert submissions"
@@ -102,7 +87,6 @@ grant execute on function get_step_by_token(text) to anon;
 
 create or replace function admin_list_submissions(p_password text)
 returns table (
-  team_name text,
   order_index int,
   mission text,
   video_path text,
@@ -121,10 +105,9 @@ begin
   end if;
 
   return query
-    select t.name, s.order_index, s.mission, sub.video_path, sub.created_at
+    select s.order_index, s.mission, sub.video_path, sub.created_at
     from submissions sub
     join steps s on s.id = sub.step_id
-    join teams t on t.id = sub.team_id
     order by sub.created_at desc;
 end;
 $$;

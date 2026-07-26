@@ -9,7 +9,6 @@ export default function Admin() {
   const [submissions, setSubmissions] = useState(null)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [teamFilter, setTeamFilter] = useState('')
   const [stepFilter, setStepFilter] = useState('')
 
   useEffect(() => {
@@ -43,18 +42,12 @@ export default function Admin() {
     load(password)
   }
 
-  const teamNames = useMemo(
-    () => [...new Set((submissions ?? []).map((s) => s.team_name))].sort(),
-    [submissions]
-  )
   const stepNumbers = useMemo(
     () => [...new Set((submissions ?? []).map((s) => s.order_index))].sort((a, b) => a - b),
     [submissions]
   )
   const filtered = (submissions ?? []).filter(
-    (s) =>
-      (!teamFilter || s.team_name === teamFilter) &&
-      (!stepFilter || String(s.order_index) === stepFilter)
+    (s) => !stepFilter || String(s.order_index) === stepFilter
   )
 
   if (!isSupabaseConfigured) {
@@ -112,16 +105,6 @@ export default function Admin() {
 
         <div className="flex gap-3 mb-6">
           <select
-            value={teamFilter}
-            onChange={(e) => setTeamFilter(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-          >
-            <option value="">Toutes les équipes</option>
-            {teamNames.map((name) => (
-              <option key={name} value={name}>{name}</option>
-            ))}
-          </select>
-          <select
             value={stepFilter}
             onChange={(e) => setStepFilter(e.target.value)}
             className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
@@ -146,7 +129,7 @@ export default function Admin() {
                 <div className="p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
                     <Film className="h-4 w-4 text-primary" />
-                    {sub.team_name} · Étape {sub.order_index}
+                    Étape {sub.order_index}
                   </div>
                   <p className="mt-1 text-sm text-gray-500">{sub.mission}</p>
                   <p className="mt-2 text-xs text-gray-400">

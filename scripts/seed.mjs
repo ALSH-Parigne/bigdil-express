@@ -1,9 +1,8 @@
-// Charge config/teams.json (ou config/teams.example.json à défaut) et
-// synchronise les équipes et les étapes (missions/indices) dans Supabase.
+// Charge config/steps.json (ou config/steps.example.json à défaut) et
+// synchronise les 8 étapes (missions/indices) dans Supabase.
 //
-// Modèle : 8 étapes PARTAGÉES par toutes les équipes (même parcours, mêmes
-// QR codes physiques). Le fichier de config contient donc une liste plate de
-// noms d'équipes, et une liste d'étapes commune à tout le monde.
+// Modèle : le site ne suit pas quelle équipe envoie une vidéo, juste les
+// étapes elles-mêmes (partagées par tout le monde, mêmes QR codes physiques).
 //
 // Important : si une étape existe déjà (même numéro d'ordre), son token est
 // CONSERVÉ tel quel. Ça évite de devoir réimprimer des QR codes déjà collés
@@ -32,38 +31,21 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
 
-const configPath = existsSync('config/teams.json')
-  ? 'config/teams.json'
-  : 'config/teams.example.json'
+const configPath = existsSync('config/steps.json')
+  ? 'config/steps.json'
+  : 'config/steps.example.json'
 
-if (configPath === 'config/teams.example.json') {
+if (configPath === 'config/steps.example.json') {
   console.warn(
-    '⚠️  config/teams.json introuvable, utilisation de config/teams.example.json ' +
-    '(données de démonstration). Copiez-le vers config/teams.json pour vos vraies équipes.'
+    '⚠️  config/steps.json introuvable, utilisation de config/steps.example.json ' +
+    '(données de démonstration). Copiez-le vers config/steps.json pour vos vraies missions/indices.'
   )
 }
 
-const { teams, steps } = JSON.parse(await readFile(configPath, 'utf-8'))
-
-console.log(`=== Équipes (${teams.length}) ===`)
-for (const teamName of teams) {
-  const { data: existing } = await supabase
-    .from('teams')
-    .select('id')
-    .eq('name', teamName)
-    .maybeSingle()
-
-  if (existing) {
-    console.log(`  = ${teamName} (déjà présente)`)
-  } else {
-    const { error } = await supabase.from('teams').insert({ name: teamName })
-    if (error) throw error
-    console.log(`  + ${teamName}`)
-  }
-}
-
-console.log(`\n=== Étapes (${steps.length}) ===`)
+const { steps } = JSON.parse(await readFile(configPath, 'utf-8'))
 const siteUrl = process.env.SITE_URL || 'http://localhost:3000'
+
+console.log(`=== Étapes (${steps.length}) ===`)
 
 for (const step of steps) {
   const { data: existingStep } = await supabase

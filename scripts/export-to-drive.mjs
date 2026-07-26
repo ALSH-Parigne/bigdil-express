@@ -1,5 +1,5 @@
 // Copie toutes les vidéos envoyées (stockées dans Supabase Storage) vers un
-// dossier Google Drive, avec un sous-dossier par équipe. À lancer après
+// dossier Google Drive, avec un sous-dossier par étape. À lancer après
 // l'événement, pour retrouver facilement les vidéos dans l'interface Drive
 // habituelle plutôt que dans le dashboard Supabase.
 //
@@ -59,29 +59,26 @@ const LOG_PATH = 'output/drive-export-log.json'
 await mkdir('output', { recursive: true })
 const log = existsSync(LOG_PATH) ? JSON.parse(await readFile(LOG_PATH, 'utf-8')) : {}
 
-const [{ data: teams, error: teamsError }, { data: steps, error: stepsError }, { data: submissions, error: subsError }] =
+const [{ data: steps, error: stepsError }, { data: submissions, error: subsError }] =
   await Promise.all([
-    supabase.from('teams').select('id, name'),
     supabase.from('steps').select('id, order_index'),
-    supabase.from('submissions').select('id, step_id, team_id, video_path, created_at').order('created_at'),
+    supabase.from('submissions').select('id, step_id, video_path, created_at').order('created_at'),
   ])
 
-if (teamsError) throw teamsError
 if (stepsError) throw stepsError
 if (subsError) throw subsError
 
-const teamsById = Object.fromEntries(teams.map((t) => [t.id, t]))
 const stepsById = Object.fromEntries(steps.map((s) => [s.id, s]))
 
-async function getOrCreateTeamFolder(teamName) {
-  const escaped = teamName.replace(/'/g, "\\'")
-  const q = `name='${escaped}' and '${ROOT_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`
+async function getOrCreateStepFolder(orderIndex) {
+  const name = `Étape ${orderIndex}`
+  const q = `name='${name}' and '${ROOT_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`
   const res = await drive.files.list({ q, fields: 'files(id, name)' })
   if (res.data.files.length > 0) return res.data.files[0].id
 
   const created = await drive.files.create({
     requestBody: {
-      name: teamName,
+      name,
       mimeType: 'application/vnd.google-apps.folder',
       parents: [ROOT_FOLDER_ID],
     },
@@ -90,7 +87,7 @@ async function getOrCreateTeamFolder(teamName) {
   return created.data.id
 }
 
-const teamFolderCache = {}
+const stepFolderCache = {}
 let exported = 0
 let skipped = 0
 let failed = 0
@@ -102,17 +99,16 @@ for (const sub of submissions) {
   }
 
   const step = stepsById[sub.step_id]
-  const team = teamsById[sub.team_id]
-  if (!step || !team) {
-    console.warn(`⚠️  Soumission ${sub.id} ignorée : équipe/étape introuvable.`)
+  if (!step) {
+    console.warn(`⚠️  Soumission ${sub.id} ignorée : étape introuvable.`)
     failed++
     continue
   }
 
-  if (!teamFolderCache[team.id]) {
-    teamFolderCache[team.id] = await getOrCreateTeamFolder(team.name)
+  if (!stepFolderCache[step.id]) {
+    stepFolderCache[step.id] = await getOrCreateStepFolder(step.order_index)
   }
-  const folderId = teamFolderCache[team.id]
+  const folderId = stepFolderCache[step.id]
 
   const { data: publicUrlData } = supabase.storage.from('videos').getPublicUrl(sub.video_path)
 
@@ -123,7 +119,7 @@ for (const sub of submissions) {
     const buffer = Buffer.from(await response.arrayBuffer())
     const extension = sub.video_path.split('.').pop() || 'mp4'
     const dateLabel = new Date(sub.created_at).toISOString().slice(0, 19).replace(/[:T]/g, '-')
-    const fileName = `${team.name} - Étape ${step.order_index} - ${dateLabel}.${extension}`
+    const fileName = `Étape ${step.order_index} - ${dateLabel}.${extension}`
 
     const created = await drive.files.create({
       requestBody: { name: fileName, parents: [folderId] },

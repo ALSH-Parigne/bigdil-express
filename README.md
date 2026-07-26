@@ -10,14 +10,11 @@ suivant.
   dans ce cas) : tout le monde suit le même parcours, aux mêmes 8 stations.
 - Chaque QR code pointe vers `https://votre-site.fr/j/<token>` où `<token>` est
   unique à une étape précise (mais commun à toutes les équipes).
-- Au premier scan, le téléphone demande "Quelle est votre équipe ?" (liste
-  déroulante) puis mémorise le choix (`localStorage`) pour les scans suivants
-  sur ce même téléphone — un lien "changer" permet de corriger si besoin.
-- La page d'étape affiche ensuite la mission, ouvre l'appareil photo natif du
-  téléphone pour filmer, uploade la vidéo, puis affiche l'indice **tout de
-  suite** (pas de validation manuelle).
+- Le site ne cherche pas à savoir quelle équipe envoie quoi : scanner le QR
+  code → filmer la mission → envoyer → indice débloqué **tout de suite**
+  (pas de validation manuelle). Simple et anonyme.
 - Une page `/admin` protégée par mot de passe permet aux animateurs de
-  revoir toutes les vidéos envoyées, filtrables par équipe et par étape.
+  revoir toutes les vidéos envoyées, filtrables par étape.
 
 ## 🛠️ Stack
 
@@ -55,18 +52,17 @@ Remplissez `.env` avec les valeurs récupérées à l'étape précédente.
 npm install
 ```
 
-### 3. Définir les équipes, missions et indices
+### 3. Définir les missions et indices
 
 Copiez le fichier d'exemple et éditez-le :
 
 ```bash
-cp config/teams.example.json config/teams.json
+cp config/steps.example.json config/steps.json
 ```
 
-Le fichier contient deux listes :
-- `teams` : les noms des 25 équipes (une simple liste de chaînes de caractères).
-- `steps` : les 8 étapes du parcours commun, avec pour chacune la mission (ce
-  que les enfants doivent filmer) et l'indice débloqué une fois la vidéo envoyée.
+Le fichier contient la liste des 8 étapes du parcours commun, avec pour
+chacune la mission (ce que les enfants doivent filmer) et l'indice débloqué
+une fois la vidéo envoyée.
 
 Puis synchronisez avec Supabase :
 
@@ -76,8 +72,7 @@ npm run seed
 
 **Important** : relancer `npm run seed` après une modif est sans risque — le
 token de chaque étape déjà créée est conservé (seul le texte est mis à jour),
-donc les QR codes déjà imprimés continuent de fonctionner. Les équipes déjà
-présentes (même nom) ne sont pas dupliquées.
+donc les QR codes déjà imprimés continuent de fonctionner.
 
 ### 4. Générer les QR codes à imprimer
 
@@ -120,7 +115,7 @@ Le site est sur `http://localhost:3000`. Ouvrez une des URLs affichées par
 Les vidéos sont stockées dans Supabase pendant l'événement (upload direct et
 fiable depuis le téléphone des enfants, sans backend à maintenir). Une fois
 l'événement terminé, un script permet de copier toutes les vidéos dans un
-dossier Google Drive classique, organisé par équipe, pour les consulter avec
+dossier Google Drive classique, organisé par étape, pour les consulter avec
 l'interface Drive habituelle plutôt que le dashboard Supabase.
 
 Google Drive n'accepte pas d'upload anonyme direct depuis un navigateur : il
@@ -157,9 +152,9 @@ risque de bug pendant le jeu).
 npm run export-drive
 ```
 
-Le script crée un sous-dossier par équipe et y copie chaque vidéo, avec un
-nom clair (`Équipe - Étape N - date.ext`). Il peut être relancé sans risque
-de doublon : les vidéos déjà exportées sont mémorisées dans
+Le script crée un sous-dossier par étape et y copie chaque vidéo, avec un
+nom clair (`Étape N - date.ext`). Il peut être relancé sans risque de
+doublon : les vidéos déjà exportées sont mémorisées dans
 `output/drive-export-log.json` et ne sont pas renvoyées une seconde fois.
 
 ## 📱 Compatibilité vidéo
@@ -191,15 +186,13 @@ l'événement (pas de souci de permissions caméra ou de format non supporté).
 ```
 src/
   pages/Home.jsx     Page d'accueil (avant tout scan)
-  pages/Step.jsx      Page d'étape (sélection équipe, mission, caméra, indice)
-  pages/Admin.jsx      Espace animateurs (vidéos reçues, filtrables)
-  components/TeamPicker.jsx    Sélection de l'équipe (mémorisée sur le téléphone)
+  pages/Step.jsx      Page d'étape (mission, caméra, indice)
+  pages/Admin.jsx      Espace animateurs (vidéos reçues, filtrables par étape)
   components/VideoCapture.jsx   Capture + prévisualisation vidéo
   lib/supabase.js      Client Supabase
-  lib/team.js       Persistance de l'équipe choisie (localStorage)
 supabase/schema.sql     Schéma complet à exécuter dans Supabase
-scripts/seed.mjs      Synchronise config/teams.json -> Supabase
+scripts/seed.mjs      Synchronise config/steps.json -> Supabase
 scripts/generate-qrcodes.mjs  Génère les QR codes imprimables
 scripts/export-to-drive.mjs  Copie les vidéos vers Google Drive (après l'événement)
-config/teams.example.json   Modèle à copier vers config/teams.json
+config/steps.example.json   Modèle à copier vers config/steps.json
 ```
