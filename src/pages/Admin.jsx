@@ -123,9 +123,14 @@ export default function Admin() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {filtered.map((sub, i) => {
             const { data } = supabase.storage.from('videos').getPublicUrl(sub.video_path)
+            const isPhoto = /\.(jpe?g|png|webp|heic|heif)$/i.test(sub.video_path)
             return (
               <div key={i} className="bg-white rounded-2xl shadow-custom overflow-hidden">
-                <video src={data.publicUrl} controls playsInline className="w-full bg-black aspect-video" />
+                {isPhoto ? (
+                  <img src={data.publicUrl} alt="" className="w-full bg-black aspect-video object-contain" />
+                ) : (
+                  <video src={data.publicUrl} controls playsInline className="w-full bg-black aspect-video" />
+                )}
                 <div className="p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
                     <Film className="h-4 w-4 text-primary" />

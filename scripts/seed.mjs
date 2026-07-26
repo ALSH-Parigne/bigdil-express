@@ -61,6 +61,7 @@ for (const step of steps) {
     token,
     mission: step.mission,
     mission_video_url: step.missionVideo ?? null,
+    capture_type: step.captureType ?? 'video',
     clue_text: step.clue,
     clue_image_url: step.clueImage ?? null,
   }

@@ -77,6 +77,10 @@ directement vers un fichier lisible par une balise `<video>` — pour un lien
 YouTube classique, il faudra passer par un lecteur embarqué plutôt que ce
 champ, qui attend un fichier vidéo direct (.mp4, .webm...).
 
+Par défaut, chaque étape demande une vidéo. Pour une étape où les enfants
+doivent plutôt prendre **une photo**, ajoutez `"captureType": "photo"` à
+cette étape dans le fichier de config.
+
 Puis synchronisez avec Supabase :
 
 ```bash

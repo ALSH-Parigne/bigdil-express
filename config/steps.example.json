@@ -18,7 +18,8 @@
     },
     {
       "order": 4,
-      "mission": "Filmez toute l'équipe en train de faire la statue pendant 5 secondes.",
+      "mission": "Prenez une photo de toute l'équipe en train de faire la statue !",
+      "captureType": "photo",
       "clue": "Allez près du portail d'entrée, regardez sous le pot de fleurs."
     },
     {

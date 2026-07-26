@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { AlertTriangle, Lightbulb, Sparkles } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase.js'
 import VideoCapture from '../components/VideoCapture.jsx'
+import PhotoCapture from '../components/PhotoCapture.jsx'
 
 export default function Step() {
   const { token } = useParams()
@@ -37,12 +38,14 @@ export default function Step() {
     setUploading(true)
     setUploadError(null)
     try {
-      const extension = (file.name.split('.').pop() || 'mp4').toLowerCase()
+      const defaultExtension = step.capture_type === 'photo' ? 'jpg' : 'mp4'
+      const extension = (file.name.split('.').pop() || defaultExtension).toLowerCase()
       const path = `${step.step_id}/${Date.now()}.${extension}`
+      const defaultContentType = step.capture_type === 'photo' ? 'image/jpeg' : 'video/mp4'
 
       const { error: uploadErr } = await supabase.storage
         .from('videos')
-        .upload(path, file, { contentType: file.type || 'video/mp4' })
+        .upload(path, file, { contentType: file.type || defaultContentType })
       if (uploadErr) throw uploadErr
 
       const { error: insertErr } = await supabase
@@ -103,7 +106,11 @@ export default function Step() {
 
         {!revealed && (
           <>
-            <VideoCapture onConfirm={handleConfirm} uploading={uploading} />
+            {step.capture_type === 'photo' ? (
+              <PhotoCapture onConfirm={handleConfirm} uploading={uploading} />
+            ) : (
+              <VideoCapture onConfirm={handleConfirm} uploading={uploading} />
+            )}
             {uploadError && (
               <p className="mt-3 text-center text-sm text-red-600">{uploadError}</p>
             )}
@@ -128,7 +135,7 @@ export default function Step() {
             )}
             <div className="mt-4 flex items-center gap-2 text-sm text-secondary font-medium">
               <Sparkles className="h-4 w-4" />
-              Vidéo bien reçue, bravo !
+              {step.capture_type === 'photo' ? 'Photo bien reçue, bravo !' : 'Vidéo bien reçue, bravo !'}
             </div>
           </div>
         )}

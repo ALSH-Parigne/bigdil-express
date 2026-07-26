@@ -19,6 +19,7 @@ create table if not exists steps (
   token text unique not null,
   mission text not null,
   mission_video_url text,
+  capture_type text not null default 'video' check (capture_type in ('video', 'photo')),
   clue_text text not null,
   clue_image_url text,
   created_at timestamptz default now()
@@ -68,6 +69,7 @@ returns table (
   order_index int,
   mission text,
   mission_video_url text,
+  capture_type text,
   clue_text text,
   clue_image_url text
 )
@@ -75,7 +77,7 @@ language sql
 security definer
 set search_path = public
 as $$
-  select s.id, s.order_index, s.mission, s.mission_video_url, s.clue_text, s.clue_image_url
+  select s.id, s.order_index, s.mission, s.mission_video_url, s.capture_type, s.clue_text, s.clue_image_url
   from steps s
   where s.token = p_token;
 $$;
