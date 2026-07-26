@@ -58,7 +58,7 @@ const html = `<!doctype html>
 <html lang="fr">
 <head>
 <meta charset="utf-8" />
-<title>Chasse au trésor - QR codes</title>
+<title>Bigdil-express - QR codes</title>
 <style>
   body { font-family: -apple-system, sans-serif; margin: 0; padding: 24px; }
   h1 { text-align: center; }
@@ -72,7 +72,7 @@ const html = `<!doctype html>
 </style>
 </head>
 <body>
-  <h1>Chasse au trésor - 8 étapes (parcours commun à toutes les équipes)</h1>
+  <h1>Bigdil-express - 8 étapes (parcours commun à toutes les équipes)</h1>
   <div class="grid">${cardsHtml}</div>
 </body>
 </html>`

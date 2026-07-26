@@ -1,9 +1,9 @@
 {
-  "name": "chasse-tresor-parigne",
+  "name": "bigdil-express",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Jeu de piste vidéo (QR codes + indices) pour l'ALSH Parigné-sur-Braye",
+  "description": "Bigdil-express - Jeu de piste vidéo (QR codes + indices) pour l'ALSH Parigné-sur-Braye",
   "author": "Cyril Vanhamme",
   "scripts": {
     "dev": "vite",

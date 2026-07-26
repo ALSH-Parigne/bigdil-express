@@ -9,7 +9,7 @@ export default function Home() {
         </div>
 
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Chasse au trésor vidéo
+          Bigdil-express
         </h1>
         <p className="text-gray-500 mb-8">
           ALSH Parigné-sur-Braye

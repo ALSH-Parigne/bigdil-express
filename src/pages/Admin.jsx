@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Lock, RefreshCw, Film } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase.js'
 
-const SESSION_KEY = 'chasse-tresor-admin-password'
+const SESSION_KEY = 'bigdil-express-admin-password'
 
 export default function Admin() {
   const [password, setPassword] = useState('')

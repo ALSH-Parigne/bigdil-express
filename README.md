@@ -1,4 +1,4 @@
-# Chasse au trésor vidéo - ALSH Parigné-sur-Braye
+# Bigdil-express - ALSH Parigné-sur-Braye
 
 Mini-site pour un jeu de piste : les enfants scannent un QR code, filment une
 vidéo avec leur mission, l'envoient, et débloquent immédiatement l'indice
@@ -114,7 +114,7 @@ Le site est sur `http://localhost:3000`. Ouvrez une des URLs affichées par
 
 ### 6. Déployer (Netlify, gratuit)
 
-**Site en production** : https://chasse-tresor-parigne.netlify.app
+**Site en production** : https://bigdil-express.netlify.app
 
 Déployé via la Netlify CLI (`brew install netlify-cli` puis `netlify login`),
 sans intégration GitHub continue — chaque changement de **code** (pas de
