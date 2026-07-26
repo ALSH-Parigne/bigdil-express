@@ -18,6 +18,7 @@ create table if not exists steps (
   order_index int unique not null,
   token text unique not null,
   mission text not null,
+  mission_video_url text,
   clue_text text not null,
   clue_image_url text,
   created_at timestamptz default now()
@@ -66,6 +67,7 @@ returns table (
   step_id uuid,
   order_index int,
   mission text,
+  mission_video_url text,
   clue_text text,
   clue_image_url text
 )
@@ -73,7 +75,7 @@ language sql
 security definer
 set search_path = public
 as $$
-  select s.id, s.order_index, s.mission, s.clue_text, s.clue_image_url
+  select s.id, s.order_index, s.mission, s.mission_video_url, s.clue_text, s.clue_image_url
   from steps s
   where s.token = p_token;
 $$;

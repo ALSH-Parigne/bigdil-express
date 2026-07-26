@@ -11,8 +11,9 @@ suivant.
 - Chaque QR code pointe vers `https://votre-site.fr/j/<token>` où `<token>` est
   unique à une étape précise (mais commun à toutes les équipes).
 - Le site ne cherche pas à savoir quelle équipe envoie quoi : scanner le QR
-  code → filmer la mission → envoyer → indice débloqué **tout de suite**
-  (pas de validation manuelle). Simple et anonyme.
+  code → **regarder une courte vidéo qui explique la mission** → filmer la
+  mission → envoyer → indice débloqué **tout de suite** (pas de validation
+  manuelle). Simple et anonyme.
 - Une page `/admin` protégée par mot de passe permet aux animateurs de
   revoir toutes les vidéos envoyées, filtrables par étape.
 
@@ -61,8 +62,20 @@ cp config/steps.example.json config/steps.json
 ```
 
 Le fichier contient la liste des 8 étapes du parcours commun, avec pour
-chacune la mission (ce que les enfants doivent filmer) et l'indice débloqué
-une fois la vidéo envoyée.
+chacune la mission (texte, ce que les enfants doivent filmer), une vidéo de
+mission optionnelle (`missionVideo`, l'URL d'une vidéo qui explique la
+mission — affichée en haut de la page avant que les enfants filment) et
+l'indice débloqué une fois la vidéo envoyée.
+
+Pour ajouter une vidéo de mission : uploadez le fichier vidéo dans le bucket
+Supabase (Dashboard > Storage > bucket `videos`, créez un dossier `missions/`
+par exemple), puis copiez son URL publique (clic droit sur le fichier >
+"Copy URL", ou bouton de partage) dans le champ `missionVideo` de l'étape
+correspondante. Vous pouvez aussi utiliser n'importe quelle autre URL vidéo
+publique (YouTube non listé, Google Drive partagé, etc.) tant qu'elle pointe
+directement vers un fichier lisible par une balise `<video>` — pour un lien
+YouTube classique, il faudra passer par un lecteur embarqué plutôt que ce
+champ, qui attend un fichier vidéo direct (.mp4, .webm...).
 
 Puis synchronisez avec Supabase :
 

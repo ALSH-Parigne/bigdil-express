@@ -60,6 +60,7 @@ for (const step of steps) {
     order_index: step.order,
     token,
     mission: step.mission,
+    mission_video_url: step.missionVideo ?? null,
     clue_text: step.clue,
     clue_image_url: step.clueImage ?? null,
   }

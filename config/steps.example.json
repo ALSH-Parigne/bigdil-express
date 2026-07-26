@@ -3,6 +3,7 @@
     {
       "order": 1,
       "mission": "Filmez-vous en train de pousser le cri d'un animal, tous ensemble !",
+      "missionVideo": "https://xxxxxxxx.supabase.co/storage/v1/object/public/videos/missions/etape-1.mp4",
       "clue": "Direction le grand chêne près du terrain de foot. Cherchez sous le banc rouge."
     },
     {
