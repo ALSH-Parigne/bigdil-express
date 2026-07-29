@@ -221,6 +221,39 @@ npm run export-drive -- --delete-after
 Chaque vidéo n'est supprimée de Supabase **qu'après** confirmation qu'elle a
 bien été copiée sur Drive — aucun risque de perte.
 
+### Export automatique pendant l'événement
+
+Le transfert vers Drive n'est **pas** automatique par défaut : les vidéos
+arrivent dans Supabase (visibles immédiatement dans `/admin`), et c'est la
+commande ci-dessus qui les copie sur Drive.
+
+Pour que ça se fasse tout seul pendant l'événement, ouvrez le Terminal et
+lancez :
+
+```bash
+npm run auto-export
+```
+
+La boucle exporte les nouveaux fichiers toutes les 10 minutes, tant que la
+fenêtre du Terminal reste ouverte (Ctrl+C pour arrêter). Variantes :
+
+```bash
+INTERVAL=300 npm run auto-export       # toutes les 5 minutes
+DELETE_AFTER=1 npm run auto-export     # libère Supabase au fur et à mesure
+```
+
+> ⚠️ Avec `DELETE_AFTER=1`, les fichiers exportés **disparaissent de la page
+> `/admin`** (ils ne sont plus que sur Drive). À n'utiliser que si le stockage
+> Supabase pose problème.
+
+**Pourquoi une boucle dans le Terminal et pas une vraie tâche de fond ?**
+Une tâche de fond macOS (`launchd`) n'a pas le droit de lire le dossier
+`Documents` sans que l'utilisateur accorde manuellement « Accès complet au
+disque » dans Réglages Système > Confidentialité et sécurité — testé, ça
+échoue avec `Operation not permitted`. Lancée depuis le Terminal, la boucle
+hérite des permissions du Terminal : rien à configurer. Contrepartie : le Mac
+doit rester allumé et la fenêtre ouverte pendant l'événement.
+
 ## 💾 Stockage (plan gratuit Supabase)
 
 Le plan gratuit inclut environ 1 Go de stockage fichiers et 5 Go de bande
@@ -273,5 +306,6 @@ scripts/seed.mjs      Synchronise config/steps.json -> Supabase
 scripts/generate-qrcodes.mjs  Génère les QR codes imprimables
 scripts/drive-auth.mjs    Autorisation OAuth Google ponctuelle (une fois)
 scripts/export-to-drive.mjs  Copie les vidéos vers Google Drive (après l'événement)
+scripts/auto-export.sh    Boucle d'export automatique (pendant l'événement)
 config/steps.example.json   Modèle à copier vers config/steps.json
 ```

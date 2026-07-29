@@ -13,7 +13,8 @@
     "seed": "node scripts/seed.mjs",
     "qrcodes": "node scripts/generate-qrcodes.mjs",
     "drive-auth": "node scripts/drive-auth.mjs",
-    "export-drive": "node scripts/export-to-drive.mjs"
+    "export-drive": "node scripts/export-to-drive.mjs",
+    "auto-export": "bash scripts/auto-export.sh"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
