@@ -193,6 +193,30 @@ nom clair (`Étape N - date.ext`). Il peut être relancé sans risque de
 doublon : les vidéos déjà exportées sont mémorisées dans
 `output/drive-export-log.json` et ne sont pas renvoyées une seconde fois.
 
+Pour libérer de la place sur Supabase au fur et à mesure (utile si le
+stockage gratuit approche sa limite pendant l'événement) :
+
+```bash
+npm run export-drive -- --delete-after
+```
+
+Chaque vidéo n'est supprimée de Supabase **qu'après** confirmation qu'elle a
+bien été copiée sur Drive — aucun risque de perte.
+
+## 💾 Stockage (plan gratuit Supabase)
+
+Le plan gratuit inclut environ 1 Go de stockage fichiers et 5 Go de bande
+passante par mois (vérifiez les chiffres exacts sur votre dashboard :
+**Project Settings > Billing/Usage**). Avec 25 équipes × 8 étapes, jusqu'à
+200 vidéos/photos peuvent être envoyées le jour de l'événement — de quoi
+dépasser le quota gratuit selon la taille des vidéos.
+
+Si l'espace vient à manquer pendant l'événement : lancez
+`npm run export-drive -- --delete-after` pour libérer de la place sans rien
+perdre (tout part sur Google Drive avant suppression). Pour un événement
+plus important, envisagez de passer temporairement au plan payant Supabase
+(Pro, résiliable) avant le jour J plutôt que de gérer ça en direct.
+
 ## 📱 Compatibilité vidéo
 
 Le bouton "Filmer la vidéo" utilise la capture caméra native du téléphone

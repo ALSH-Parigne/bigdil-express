@@ -14,6 +14,8 @@
 //     a été partagé par un vrai compte)
 //
 // Usage : npm run export-drive
+//         npm run export-drive -- --delete-after   (libère la place sur Supabase
+//         une fois chaque vidéo confirmée exportée avec succès sur Drive)
 
 import 'dotenv/config'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
@@ -46,6 +48,8 @@ if (!existsSync(KEY_FILE)) {
   console.error(`Erreur : fichier de clé introuvable : ${KEY_FILE}`)
   process.exit(1)
 }
+
+const DELETE_AFTER = process.argv.includes('--delete-after')
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
 
@@ -133,6 +137,15 @@ for (const sub of submissions) {
     log[sub.id] = created.data.id
     exported++
     console.log(`✅ ${fileName}`)
+
+    if (DELETE_AFTER) {
+      const { error: removeErr } = await supabase.storage.from('videos').remove([sub.video_path])
+      if (removeErr) console.warn(`   ⚠️  Fichier Supabase non supprimé : ${removeErr.message}`)
+
+      const { error: deleteRowErr } = await supabase.from('submissions').delete().eq('id', sub.id)
+      if (deleteRowErr) console.warn(`   ⚠️  Ligne submissions non supprimée : ${deleteRowErr.message}`)
+      else console.log('   🗑️  Libéré de Supabase (déjà en sécurité sur Drive)')
+    }
   } catch (err) {
     console.error(`❌ Échec pour la soumission ${sub.id} (${sub.video_path}) :`, err.message)
     failed++
@@ -143,5 +156,6 @@ await writeFile(LOG_PATH, JSON.stringify(log, null, 2))
 
 console.log(
   `\nTerminé : ${exported} vidéo(s) exportée(s), ${skipped} déjà exportée(s) précédemment` +
-  (failed ? `, ${failed} échec(s).` : '.')
+  (failed ? `, ${failed} échec(s).` : '.') +
+  (DELETE_AFTER ? ' Espace libéré sur Supabase pour les vidéos exportées.' : '')
 )
