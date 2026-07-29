@@ -7,11 +7,10 @@
 // dans output/drive-export-log.json et ne sont pas re-uploadées.
 //
 // Prérequis (voir le README, section "Export vers Google Drive") :
-//   - un compte de service Google Cloud avec l'API Drive activée
-//   - un dossier dans VOTRE Google Drive, partagé en "Éditeur" avec l'adresse
-//     e-mail du compte de service (un compte de service seul n'a pas de
-//     quota de stockage Drive propre, il doit écrire dans un dossier qui lui
-//     a été partagé par un vrai compte)
+//   - un identifiant OAuth "Desktop app" + le jeton généré une fois par
+//     "npm run drive-auth" (login avec VOTRE compte Google — un compte de
+//     service seul n'a pas de quota de stockage Drive sur un compte Gmail
+//     personnel, l'upload échoue systématiquement)
 //
 // Usage : npm run export-drive
 //         npm run export-drive -- --delete-after   (libère la place sur Supabase
@@ -26,7 +25,8 @@ import { google } from 'googleapis'
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-const KEY_FILE = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE
+const CLIENT_FILE = process.env.GOOGLE_OAUTH_CLIENT_FILE
+const TOKEN_PATH = 'google-oauth-token.json'
 const ROOT_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID
 
 if (!SUPABASE_URL || !SERVICE_KEY) {
@@ -36,16 +36,19 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
   process.exit(1)
 }
 
-if (!KEY_FILE || !ROOT_FOLDER_ID) {
+if (!CLIENT_FILE || !ROOT_FOLDER_ID) {
   console.error(
-    'Erreur : GOOGLE_SERVICE_ACCOUNT_KEY_FILE et GOOGLE_DRIVE_FOLDER_ID doivent être définis ' +
+    'Erreur : GOOGLE_OAUTH_CLIENT_FILE et GOOGLE_DRIVE_FOLDER_ID doivent être définis ' +
     'dans .env. Voir le README, section "Export vers Google Drive", pour la marche à suivre.'
   )
   process.exit(1)
 }
 
-if (!existsSync(KEY_FILE)) {
-  console.error(`Erreur : fichier de clé introuvable : ${KEY_FILE}`)
+if (!existsSync(TOKEN_PATH)) {
+  console.error(
+    `Erreur : ${TOKEN_PATH} introuvable. Lancez d'abord "npm run drive-auth" (autorisation ` +
+    'ponctuelle avec votre compte Google).'
+  )
   process.exit(1)
 }
 
@@ -53,11 +56,12 @@ const DELETE_AFTER = process.argv.includes('--delete-after')
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
 
-const auth = new google.auth.GoogleAuth({
-  keyFile: KEY_FILE,
-  scopes: ['https://www.googleapis.com/auth/drive'],
-})
-const drive = google.drive({ version: 'v3', auth })
+const { installed, web } = JSON.parse(await readFile(CLIENT_FILE, 'utf-8'))
+const creds = installed ?? web
+const oauth2Client = new google.auth.OAuth2(creds.client_id, creds.client_secret)
+oauth2Client.setCredentials(JSON.parse(await readFile(TOKEN_PATH, 'utf-8')))
+
+const drive = google.drive({ version: 'v3', auth: oauth2Client })
 
 const LOG_PATH = 'output/drive-export-log.json'
 await mkdir('output', { recursive: true })
@@ -74,20 +78,48 @@ if (subsError) throw subsError
 
 const stepsById = Object.fromEntries(steps.map((s) => [s.id, s]))
 
+// Les dossiers créés à la main dans Drive peuvent s'écrire "etape 3", "Etape 3"
+// ou "Étape 3" : on compare sans accents ni casse pour réutiliser le dossier
+// existant au lieu d'en créer un doublon.
+function normalize(text) {
+  return text
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+const existingFolders = []
+{
+  let pageToken
+  do {
+    const res = await drive.files.list({
+      q: `'${ROOT_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      fields: 'nextPageToken, files(id, name, ownedByMe)',
+      pageToken,
+    })
+    existingFolders.push(...res.data.files)
+    pageToken = res.data.nextPageToken
+  } while (pageToken)
+}
+
 async function getOrCreateStepFolder(orderIndex) {
-  const name = `Étape ${orderIndex}`
-  const q = `name='${name}' and '${ROOT_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`
-  const res = await drive.files.list({ q, fields: 'files(id, name)' })
-  if (res.data.files.length > 0) return res.data.files[0].id
+  // En cas de plusieurs dossiers au nom équivalent, on privilégie celui que
+  // l'utilisateur possède : lui seul pourra ensuite le renommer ou le vider.
+  const candidates = existingFolders.filter((f) => normalize(f.name) === `etape ${orderIndex}`)
+  const match = candidates.find((f) => f.ownedByMe) ?? candidates[0]
+  if (match) return match.id
 
   const created = await drive.files.create({
     requestBody: {
-      name,
+      name: `Étape ${orderIndex}`,
       mimeType: 'application/vnd.google-apps.folder',
       parents: [ROOT_FOLDER_ID],
     },
-    fields: 'id',
+    fields: 'id, name',
   })
+  existingFolders.push({ id: created.data.id, name: created.data.name, ownedByMe: true })
   return created.data.id
 }
 

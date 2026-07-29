@@ -154,33 +154,45 @@ l'événement terminé, un script permet de copier toutes les vidéos dans un
 dossier Google Drive classique, organisé par étape, pour les consulter avec
 l'interface Drive habituelle plutôt que le dashboard Supabase.
 
-Google Drive n'accepte pas d'upload anonyme direct depuis un navigateur : il
-faut un compte de service Google. C'est pour ça que l'export se fait après
-coup, en local, plutôt qu'en direct le jour de l'événement (plus simple, zéro
-risque de bug pendant le jeu).
+Google Drive n'accepte pas d'upload anonyme direct depuis un navigateur, donc
+l'export se fait après coup, en local, plutôt qu'en direct le jour de
+l'événement (plus simple, zéro risque de bug pendant le jeu).
+
+⚠️ **Un compte de service seul ne suffit pas** : les comptes de service
+Google n'ont aucun quota de stockage Drive propre, et sur un compte Gmail
+personnel (pas Google Workspace), ils ne peuvent PAS écrire de fichiers même
+dans un dossier partagé en Éditeur (erreur "Service Accounts do not have
+storage quota"). Il faut donc s'authentifier avec **votre vrai compte
+Google** via OAuth.
 
 ### Mise en place (une seule fois)
 
 1. Créez un projet sur [console.cloud.google.com](https://console.cloud.google.com)
    (gratuit) et activez l'**API Google Drive** (menu "APIs & Services" > "Enable APIs").
-2. Créez un **compte de service** ("IAM & Admin" > "Service Accounts" > "Create
-   Service Account"), puis générez une clé au format JSON ("Keys" > "Add Key" >
-   "JSON"). Le fichier se télécharge automatiquement.
-3. Placez ce fichier dans le dossier du projet, par exemple sous le nom
-   `service-account-key.json` (il est déjà exclu de Git par `.gitignore` — ne
-   le partagez jamais, il donne accès à votre compte de service).
-4. Ouvrez le fichier JSON et repérez le champ `client_email` (une adresse du
-   type `xxx@yyy.iam.gserviceaccount.com`).
-5. Dans **votre** Google Drive personnel, créez un dossier (ex : "Chasse au
-   trésor Parigné - Vidéos"), clic droit > **Partager**, collez l'adresse
-   `client_email` avec le rôle **Éditeur**.
-   > Un compte de service seul n'a pas de quota de stockage Drive : il doit
-   > obligatoirement écrire dans un dossier qui lui a été partagé par un vrai
-   > compte Google — c'est ce que fait cette étape.
-6. Ouvrez ce dossier dans votre navigateur et copiez l'ID présent dans l'URL
-   (la partie après `/folders/`).
-7. Dans `.env`, renseignez `GOOGLE_SERVICE_ACCOUNT_KEY_FILE` (chemin vers le
-   fichier JSON) et `GOOGLE_DRIVE_FOLDER_ID` (l'ID copié).
+2. Configurez l'**écran de consentement OAuth** ("APIs & Services" >
+   "OAuth consent screen") si ce n'est pas déjà fait : type "External",
+   renseignez le nom de l'app et un e-mail de contact, enregistrez. Dans
+   "Test users", ajoutez votre propre adresse Gmail (celle qui possède le
+   Drive de destination) — sans ça, l'autorisation sera refusée.
+3. Créez un identifiant OAuth ("APIs & Services" > "Credentials" >
+   "Create Credentials" > "OAuth client ID"), type d'application
+   **"Desktop app"**, donnez-lui un nom, puis téléchargez le JSON généré.
+4. Placez ce fichier dans le dossier du projet, par exemple sous le nom
+   `google-oauth-client.json` (déjà exclu de Git par `.gitignore`).
+5. Dans **votre** Google Drive personnel, créez un dossier (ex : "Bigdil-express
+   - Vidéos") et ouvrez-le dans votre navigateur pour copier l'ID présent
+   dans l'URL (la partie après `/folders/`).
+6. Dans `.env`, renseignez `GOOGLE_OAUTH_CLIENT_FILE` (chemin vers le fichier
+   JSON) et `GOOGLE_DRIVE_FOLDER_ID` (l'ID copié).
+7. Lancez l'autorisation ponctuelle :
+   ```bash
+   npm run drive-auth
+   ```
+   Une page Google s'ouvre dans votre navigateur : connectez-vous avec le
+   compte propriétaire du dossier Drive et autorisez l'accès. Un jeton est
+   enregistré localement (`google-oauth-token.json`, exclu de Git) et
+   réutilisé automatiquement par la suite — cette étape ne se refait pas à
+   chaque export.
 
 ### Utilisation
 
@@ -188,10 +200,16 @@ risque de bug pendant le jeu).
 npm run export-drive
 ```
 
-Le script crée un sous-dossier par étape et y copie chaque vidéo, avec un
-nom clair (`Étape N - date.ext`). Il peut être relancé sans risque de
-doublon : les vidéos déjà exportées sont mémorisées dans
-`output/drive-export-log.json` et ne sont pas renvoyées une seconde fois.
+Le script range chaque vidéo dans un sous-dossier par étape, avec un nom clair
+(`Étape N - date.ext`). Si vous avez déjà créé les dossiers à la main dans
+Drive, ils sont réutilisés : la comparaison ignore accents et majuscules
+(`etape 3`, `Etape 3` et `Étape 3` sont considérés identiques), et les
+dossiers dont vous êtes propriétaire sont privilégiés. Sinon les dossiers
+manquants sont créés automatiquement.
+
+Le script peut être relancé sans risque de doublon : les vidéos déjà
+exportées sont mémorisées dans `output/drive-export-log.json` et ne sont pas
+renvoyées une seconde fois.
 
 Pour libérer de la place sur Supabase au fur et à mesure (utile si le
 stockage gratuit approche sa limite pendant l'événement) :
@@ -253,6 +271,7 @@ src/
 supabase/schema.sql     Schéma complet à exécuter dans Supabase
 scripts/seed.mjs      Synchronise config/steps.json -> Supabase
 scripts/generate-qrcodes.mjs  Génère les QR codes imprimables
+scripts/drive-auth.mjs    Autorisation OAuth Google ponctuelle (une fois)
 scripts/export-to-drive.mjs  Copie les vidéos vers Google Drive (après l'événement)
 config/steps.example.json   Modèle à copier vers config/steps.json
 ```

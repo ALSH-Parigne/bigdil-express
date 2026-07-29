@@ -6,6 +6,8 @@ output
 .DS_Store
 *.log
 service-account-key.json
+google-oauth-client.json
+google-oauth-token.json
 
 # Local Netlify folder
 .netlify

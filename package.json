@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "seed": "node scripts/seed.mjs",
     "qrcodes": "node scripts/generate-qrcodes.mjs",
+    "drive-auth": "node scripts/drive-auth.mjs",
     "export-drive": "node scripts/export-to-drive.mjs"
   },
   "dependencies": {
