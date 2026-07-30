@@ -254,6 +254,22 @@ disque » dans Réglages Système > Confidentialité et sécurité — testé, �
 hérite des permissions du Terminal : rien à configurer. Contrepartie : le Mac
 doit rester allumé et la fenêtre ouverte pendant l'événement.
 
+### Surveiller le stockage pendant l'événement
+
+```bash
+npm run watch-storage
+```
+
+Affiche l'espace utilisé toutes les 5 minutes et déclenche une **notification
+macOS + un son** dès 75 % du quota gratuit (1 Go), avec la commande à lancer
+pour libérer de la place. L'alerte se réarme si l'espace redescend, donc elle
+resonnera si la situation se dégrade à nouveau.
+
+```bash
+SEUIL=60 npm run watch-storage        # alerter plus tôt
+INTERVAL=120 npm run watch-storage    # vérifier toutes les 2 minutes
+```
+
 ## 💾 Stockage (plan gratuit Supabase)
 
 Le plan gratuit inclut environ 1 Go de stockage fichiers et 5 Go de bande

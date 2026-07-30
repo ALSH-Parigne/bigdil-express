@@ -14,7 +14,8 @@
     "qrcodes": "node scripts/generate-qrcodes.mjs",
     "drive-auth": "node scripts/drive-auth.mjs",
     "export-drive": "node scripts/export-to-drive.mjs",
-    "auto-export": "bash scripts/auto-export.sh"
+    "auto-export": "bash scripts/auto-export.sh",
+    "watch-storage": "node scripts/watch-storage.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
