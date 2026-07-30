@@ -132,7 +132,8 @@ export default function Step() {
               📱 <span className="font-semibold">Merci de filmer en 1080p ou 720p</span>, pas en 4K :
               la vidéo serait trop lourde pour être envoyée.
               <span className="mt-1 block text-xs text-gray-500">
-                Sur iPhone : Réglages → Appareil photo → Enregistrement vidéo
+                Sur iPhone : le réglage se change en haut à gauche de l'écran, dans l'appareil
+                photo en mode vidéo.
               </span>
             </p>
           )}
