@@ -132,8 +132,11 @@ export default function Step() {
               📱 <span className="font-semibold">Merci de filmer en 1080p ou 720p</span>, pas en 4K :
               la vidéo serait trop lourde pour être envoyée.
               <span className="mt-1 block text-xs text-gray-500">
-                Sur iPhone : le réglage se change en haut à gauche de l'écran, dans l'appareil
-                photo en mode vidéo.
+                <b>iPhone</b> : en haut à gauche de l'écran, dans l'appareil photo en mode vidéo.
+              </span>
+              <span className="mt-0.5 block text-xs text-gray-500">
+                <b>Android</b> : cherchez « FHD » en haut de l'écran, ou l'engrenage ⚙️ de
+                l'appareil photo.
               </span>
             </p>
           )}
