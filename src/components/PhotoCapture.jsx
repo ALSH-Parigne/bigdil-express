@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Camera, RotateCcw, UploadCloud, Loader2 } from 'lucide-react'
 
-export default function PhotoCapture({ onConfirm, uploading, disabled }) {
+export default function PhotoCapture({ onConfirm, onReset, uploading, disabled }) {
   const [file, setFile] = useState(null)
   const [previewUrl, setPreviewUrl] = useState(null)
   const inputRef = useRef(null)
@@ -24,6 +24,7 @@ export default function PhotoCapture({ onConfirm, uploading, disabled }) {
   function reset() {
     setFile(null)
     if (inputRef.current) inputRef.current.value = ''
+    onReset?.()
   }
 
   if (!file) {
