@@ -124,6 +124,18 @@ export default function Step() {
           ) : (
             <p className="text-gray-700">{step.mission}</p>
           )}
+
+          {/* Une vidéo 4K de 15 s pèse ~130 Mo et dépasse la limite d'envoi.
+              La même en 1080p tombe à ~18 Mo : on le dit avant qu'ils filment. */}
+          {step.capture_type !== 'photo' && !revealed && (
+            <p className="mt-4 rounded-xl bg-blue-50 px-4 py-3 text-sm text-gray-600">
+              📱 <span className="font-semibold">Merci de filmer en 1080p ou 720p</span>, pas en 4K :
+              la vidéo serait trop lourde pour être envoyée.
+              <span className="mt-1 block text-xs text-gray-500">
+                Sur iPhone : Réglages → Appareil photo → Enregistrement vidéo
+              </span>
+            </p>
+          )}
         </div>
 
         {!revealed && (
