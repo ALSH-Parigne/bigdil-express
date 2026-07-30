@@ -129,10 +129,11 @@ export default function Step() {
               La même en 1080p tombe à ~18 Mo : on le dit avant qu'ils filment. */}
           {step.capture_type !== 'photo' && !revealed && (
             <p className="mt-4 rounded-xl bg-blue-50 px-4 py-3 text-sm text-gray-600">
-              📱 <span className="font-semibold">Merci de filmer en 1080p ou 720p</span>, pas en 4K :
-              la vidéo serait trop lourde pour être envoyée.
+              📱 <span className="font-semibold">Merci de filmer en HD, pas en 4K</span> : sinon la
+              vidéo sera trop lourde pour être envoyée.
               <span className="mt-1 block text-xs text-gray-500">
-                <b>iPhone</b> : en haut à gauche de l'écran, dans l'appareil photo en mode vidéo.
+                <b>iPhone</b> : en haut de l'écran de l'appareil photo (mode vidéo), choisissez
+                <b> HD</b> au lieu de 4K, et <b>30 IPS</b> au lieu de 60.
               </span>
               <span className="mt-0.5 block text-xs text-gray-500">
                 <b>Android</b> : cherchez « FHD » en haut de l'écran, ou l'engrenage ⚙️ de
